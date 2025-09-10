@@ -1,1 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Agriculture Monitoring Dashboard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Segoe UI", sans-serif; }
+    body { background: #f4f9f4; color: #333; display: flex; flex-direction: column; min-height: 100vh; }
+    header { background: #2e7d32; color: #fff; padding: 20px 40px; text-align: center; font-size: 26px; font-weight: bold; letter-spacing: 1px; }
+    main { flex: 1; padding: 30px 60px; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; }
 
+    /* Card Styles */
+    .card {
+      background: #fff;
+      border-radius: 15px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      padding: 25px;
+      text-align: center;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+    }
+    .card h2 { margin-bottom: 15px; font-size: 20px; color: #2e7d32; }
+    .value { font-size: 28px; font-weight: bold; margin: 10px 0; }
+
+    /* Progress Bar */
+    .progress-container {
+      background: #eee;
+      border-radius: 20px;
+      overflow: hidden;
+      height: 20px;
+      margin: 10px 0;
+    }
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      border-radius: 20px;
+      transition: width 1s ease, background 0.3s;
+    }
+    .status { font-size: 13px; margin-top: 5px; color: #666; }
+
+    footer { background: #2e7d32; color: #fff; text-align: center; padding: 15px; font-size: 14px; }
+
+    /* Alert Box */
+    #alertBox {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #d32f2f;
+      color: #fff;
+      padding: 15px 20px;
+      border-radius: 8px;
+      display: none;
+      font-size: 14px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      animation: fadeInOut 4s ease-in-out;
+    }
+    @keyframes fadeInOut {
+      0% { opacity: 0; transform: translateY(-20px); }
+      10% { opacity: 1; transform: translateY(0); }
+      90% { opacity: 1; }
+      100% { opacity: 0; transform: translateY(-20px); }
+    }
+  </style>
+</head>
+<body>
+
+  <header>🌱 Agriculture Monitoring Dashboard</header>
+
+  <main>
+    <div class="card" id="soilMoistureCard">
+      <h2>Soil Moisture</h2>
+      <div class="value" id="soilMoisture">--%</div>
+      <div class="progress-container"><div class="progress-bar" id="soilMoistureBar"></div></div>
+      <div class="status">Optimal: > 30%</div>
+    </div>
+    <div class="card" id="lightCard">
+      <h2>Light Intensity</h2>
+      <div class="value" id="lightIntensity">-- lx</div>
+      <div class="progress-container"><div class="progress-bar" id="lightBar"></div></div>
+      <div class="status">Optimal: > 500 lx</div>
+    </div>
+    <div class="card" id="heatCard">
+      <h2>Heat Level</h2>
+      <div class="value" id="heatLevel">-- °C</div>
+      <div class="progress-container"><div class="progress-bar" id="heatBar"></div></div>
+      <div class="status">Optimal: 18–35 °C</div>
+    </div>
+    <div class="card" id="nutrientsCard">
+      <h2>Soil Nutrients</h2>
+      <div class="value" id="nutrientsLevel">--%</div>
+      <div class="progress-container"><div class="progress-bar" id="nutrientsBar"></div></div>
+      <div class="status">Optimal: > 40%</div>
+    </div>
+  </main>
+
+  <footer>© 2025 Agriculture Prototype App | Smart Farming Solutions</footer>
+
+  <div id="alertBox"></div>
+
+  <script>
+    function showAlert(message) {
+      const alertBox = document.getElementById('alertBox');
+      alertBox.textContent = message;
+      alertBox.style.display = 'block';
+      setTimeout(() => alertBox.style.display = 'none', 4000);
+    }
+
+    function updateMonitor(value, idValue, idBar, unit, max, thresholds) {
+      const valueElement = document.getElementById(idValue);
+      const barElement = document.getElementById(idBar);
+
+      valueElement.textContent = value + " " + unit;
+      const percent = Math.min((value / max) * 100, 100);
+      barElement.style.width = percent + "%";
+
+      // Color based on thresholds
+      if (thresholds.good(value)) {
+        barElement.style.background = "#66bb6a";
+      } else if (thresholds.warn(value)) {
+        barElement.style.background = "#fbc02d";
+      } else {
+        barElement.style.background = "#d32f2f";
+        showAlert(thresholds.alertMsg);
+      }
+    }
+
+    function updateValues() {
+      // Simulate random sensor data
+      const soilMoisture = Math.floor(Math.random() * 100);
+      const lightIntensity = Math.floor(Math.random() * 1000);
+      const heatLevel = Math.floor(Math.random() * 50);
+      const nutrientsLevel = Math.floor(Math.random() * 100);
+
+      updateMonitor(soilMoisture, "soilMoisture", "soilMoistureBar", "%", 100, {
+        good: v => v >= 30,
+        warn: v => v >= 20 && v < 30,
+        alertMsg: "⚠️ Soil Moisture is too low!"
+      });
+      updateMonitor(lightIntensity, "lightIntensity", "lightBar", "lx", 1000, {
+        good: v => v >= 500,
+        warn: v => v >= 300 && v < 500,
+        alertMsg: "⚠️ Light Intensity is below optimal!"
+      });
+      updateMonitor(heatLevel, "heatLevel", "heatBar", "°C", 50, {
+        good: v => v >= 18 && v <= 35,
+        warn: v => (v >= 15 && v < 18) || (v > 35 && v <= 38),
+        alertMsg: "⚠️ Heat Level out of range!"
+      });
+      updateMonitor(nutrientsLevel, "nutrientsLevel", "nutrientsBar", "%", 100, {
+        good: v => v >= 40,
+        warn: v => v >= 30 && v < 40,
+        alertMsg: "⚠️ Soil Nutrients are low!"
+      });
+    }
+
+    // Update every 3 seconds
+    setInterval(updateValues, 3000);
+    updateValues();
+  </script>
+
+</body>
+</html>
